@@ -1,0 +1,21 @@
+{
+  "name": "Blazor + SQL Server Dev Container",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:1": {
+      "version": "9.0"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": ["ms-dotnettools.csharp", "ms-azuretools.vscode-docker"]
+    }
+  },
+  "forwardPorts": [5231, 1433],
+  "postCreateCommand": "dotnet restore"
+}

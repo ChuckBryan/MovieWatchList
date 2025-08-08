@@ -1,0 +1,11 @@
+bin/
+obj/
+*.md
+*.json
+*.db
+*.log
+.git
+.gitignore
+.vscode
+.devcontainer
+Dockerfile
