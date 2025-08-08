@@ -1,4 +1,3 @@
-
 # Movie Watch List - Dev Container & Docker Setup
 
 ## Getting Started
