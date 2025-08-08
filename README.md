@@ -1,8 +1,9 @@
+
 # Movie Watch List - Dev Container & Docker Setup
 
 ## Getting Started
 
-This project uses VS Code Dev Containers and Docker Compose for a portable development environment with SQL Server.
+This project uses VS Code Dev Containers and Docker Compose for a portable, reproducible development environment with SQL Server.
 
 ### Prerequisites
 
@@ -10,28 +11,36 @@ This project uses VS Code Dev Containers and Docker Compose for a portable devel
 - Visual Studio Code
 - Dev Containers extension for VS Code
 
-### Dev Container Usage
+### Dev Container Workflow
 
 1. Open the project folder in VS Code.
-2. When prompted, "Reopen in Container" or use the Command Palette: `Dev Containers: Reopen in Container`.
-3. The container will build and start the app and SQL Server automatically.
+2. When prompted, select "Reopen in Container" or use the Command Palette: `Dev Containers: Reopen in Container`.
+3. The container will build and start both the Blazor app and SQL Server automatically.
+4. Develop, debug, and run your app in a consistent environment.
 
-### Environment Variables
+### Environment Variables & Secrets
 
-- Set secrets in a `.env` file (not committed):
-  - `SQLSERVER_CONNECTION_STRING=Server=db;Database=MovieWatchList;User=sa;Password=Your_password123;`
-  - `TMDB_API_KEY=your_tmdb_api_key`
+Create a `.env` file in the project root (never commit this file):
 
-### Docker Compose
+```
+SQLSERVER_CONNECTION_STRING=Server=db;Database=MovieWatchList;User=sa;Password=Your_password123;
+TMDB_API_KEY=your_tmdb_api_key
+```
 
-- The app service builds from the included `Dockerfile`.
-- The db service uses the official SQL Server image.
-- Ports 5231 (app) and 1433 (SQL Server) are forwarded.
+Your app should read these variables using .NET's configuration system. See `appsettings.json` and `Program.cs` for details.
+
+### Docker Compose Details
+
+- The `app` service builds from the included `Dockerfile` and mounts the workspace for live development.
+- The `db` service uses the official SQL Server image and exposes port 1433.
+- Ports 5231 (app) and 1433 (SQL Server) are forwarded to your host.
+- Both services are orchestrated for seamless local development.
 
 ### Troubleshooting
 
-- If you see `ENOENT: no such file or directory, open '.../Dockerfile'`, ensure the `Dockerfile` exists in the project root.
-- For SQL Server connection issues, check the password and healthcheck logs.
+- **Dockerfile not found:** Ensure `Dockerfile` is in the project root and `docker-compose.yml` references it correctly.
+- **SQL Server connection issues:** Check the password, healthcheck logs, and ensure the `db` service is healthy.
+- **Environment variables not loaded:** Make sure `.env` is present and not committed to source control.
 
 ---
 
