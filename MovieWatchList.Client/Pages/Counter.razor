@@ -1,5 +1,6 @@
 ﻿@page "/counter"
-@rendermode InteractiveAuto
+@rendermode InteractiveServer
+@using System.Diagnostics
 
 <PageTitle>Counter</PageTitle>
 
@@ -9,11 +10,95 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+<div class="mt-3">
+    <strong>Debug:</strong>
+    <div>Connection String: @connectionString</div>
+    <div>Error Message: @errorMessage</div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">
+        <h4>Database Error:</h4>
+        <p>@errorMessage</p>
+    </div>
+}
+
+@using Microsoft.Data.SqlClient
+@inject IConfiguration Configuration
+@inject ILogger<Counter> Logger
+
 @code {
     private int currentCount = 0;
+    private string? connectionString;
+    private string? errorMessage;
 
-    private void IncrementCount()
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            connectionString = Configuration.GetConnectionString("DefaultConnection") ??
+            Configuration["SQLSERVER_CONNECTION_STRING"];
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                errorMessage = "Connection string is not configured. Please check your appsettings.json or environment variables.";
+                Logger.LogError(errorMessage);
+                return;
+            }
+
+            // The table should already exist thanks to our Docker initialization
+            currentCount = await GetCountAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error initializing counter: {ex.Message}";
+            Logger.LogError(ex, "Error in OnInitializedAsync");
+        }
+    }
+
+    private async Task<int> GetCountAsync()
+    {
+        try
+        {
+            using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT Count FROM ClickCounter WHERE Id = 1";
+            var result = await cmd.ExecuteScalarAsync();
+            return result != null ? Convert.ToInt32(result) : 0;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error retrieving count: {ex.Message}";
+            Logger.LogError(ex, "Error in GetCountAsync");
+            return 0; // Return default value on error
+        }
+    }
+
+    private async Task SetCountAsync(int count)
+    {
+        try
+        {
+            using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE ClickCounter SET Count = @count WHERE Id = 1";
+            cmd.Parameters.AddWithValue("@count", count);
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating count: {ex.Message}";
+            Logger.LogError(ex, "Error in SetCountAsync");
+        }
+    }
+
+    private async Task IncrementCount()
     {
         currentCount++;
+        await SetCountAsync(currentCount);
+        // Refresh value from DB to ensure UI is in sync
+        currentCount = await GetCountAsync();
     }
 }

@@ -10,7 +10,7 @@ services:
       - 5231:5231
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - SQLSERVER_CONNECTION_STRING=Server=db;Database=MovieWatchList;User=sa;Password=Your_password123;
+      - SQLSERVER_CONNECTION_STRING=Server=db;Database=MovieWatchList;User=sa;Password=Your_password123;TrustServerCertificate=True;
       - TMDB_API_KEY=your_tmdb_api_key
     depends_on:
       - db
@@ -21,8 +21,14 @@ services:
       ACCEPT_EULA: "Y"
     ports:
       - 1433:1433
+    volumes:
+      - ./sql:/sql
+      - mssql-data:/var/opt/mssql
     healthcheck:
       test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Your_password123", "-Q", "SELECT 1"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+volumes:
+  mssql-data:

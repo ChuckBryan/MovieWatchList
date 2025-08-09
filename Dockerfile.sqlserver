@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+# Copy initialization scripts
+COPY ./sql/init.sql /docker-entrypoint-initdb.d/
+
+# Create an initialization script to be run at startup
+RUN echo '#!/bin/bash \n\
+    # Start SQL Server \n\
+    /opt/mssql/bin/sqlservr & \n\
+    \n\
+    # Wait for SQL Server to be ready \n\
+    sleep 30s \n\
+    \n\
+    # Run the initialization script \n\
+    /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $SA_PASSWORD -i /docker-entrypoint-initdb.d/init.sql \n\
+    \n\
+    # Keep container running \n\
+    tail -f /dev/null' > /init-script.sh \
+    && chmod +x /init-script.sh
+
+# Use custom initialization script
+CMD /bin/bash /init-script.sh
